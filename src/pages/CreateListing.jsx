@@ -9,6 +9,7 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from 'firebase/storage';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { v4 as uuidv4 } from 'uuid';
 export const CreateListing = () => {
@@ -121,6 +122,8 @@ export const CreateListing = () => {
           ? undefined
           : data.results[0]?.formatted_address;
 
+      console.log(location);
+
       if (location === undefined || location.includes('undefined')) {
         setLoading(false);
         toast.error('Please enter a correct address.');
@@ -129,7 +132,6 @@ export const CreateListing = () => {
     } else {
       geolocation.lat = latitude;
       geolocation.lng = longitude;
-      location = address;
     }
 
     // store image in firebase
@@ -137,15 +139,13 @@ export const CreateListing = () => {
       return new Promise((resolve, reject) => {
         const storage = getStorage();
         const fileName = `${auth.currentUser.uid}-${image.name}-${uuidv4()}`;
-        const storageRef = ref(storage, `image/${fileName}`);
+        const storageRef = ref(storage, 'images/' + fileName);
 
         const uploadTask = uploadBytesResumable(storageRef, image);
 
         uploadTask.on(
           'state_changed',
           (snapshot) => {
-            // Observe state change events such as progress, pause, and resume
-            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
             const progress =
               (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             console.log('Upload is ' + progress + '% done');
@@ -172,7 +172,7 @@ export const CreateListing = () => {
       });
     };
 
-    const imageUrls = await Promise.all(
+    const imgUrls = await Promise.all(
       [...images].map((image) => storeImage(image))
     ).catch(() => {
       setLoading(false);
@@ -180,9 +180,24 @@ export const CreateListing = () => {
       return;
     });
 
-    console.log(imageUrls);
+    console.log(imgUrls, formData);
+    const formDataCopy = {
+      ...formData,
+      imgUrls,
+      geolocation,
+      timestamp: serverTimestamp(),
+    };
+
+    // formDataCopy.location = address;
+    delete formDataCopy.images;
+    delete formDataCopy.address;
+    !formDataCopy.offer && delete formDataCopy.discounted;
+
+    const docRef = await addDoc(collection(db, 'listings'), formDataCopy);
 
     setLoading(false);
+    toast.success('Listing saved.');
+    navigate(`/category/${formDataCopy.type}/${docRef.id}`);
   };
 
   if (loading) {
