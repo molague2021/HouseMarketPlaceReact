@@ -13,7 +13,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { toast } from 'react-toastify';
-import ListingItem from '../components/ListingItems';
+import ListingItems from '../components/ListingItems';
 import arrowRight from '../assets/svg/keyboardArrowRightIcon.svg';
 import homeIcon from '../assets/svg/homeIcon.svg';
 
@@ -155,7 +155,7 @@ function Profile() {
             <p className="listingText">Your Listings</p>
             <ul className="listingsList">
               {listings.map((listing) => (
-                <ListingItem
+                <ListingItems
                   key={listing.id}
                   listing={listing.data}
                   id={listing.id}
