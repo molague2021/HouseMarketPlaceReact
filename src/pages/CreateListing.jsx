@@ -122,8 +122,6 @@ export const CreateListing = () => {
           ? undefined
           : data.results[0]?.formatted_address;
 
-      console.log(location);
-
       if (location === undefined || location.includes('undefined')) {
         setLoading(false);
         toast.error('Please enter a correct address.');
@@ -180,7 +178,6 @@ export const CreateListing = () => {
       return;
     });
 
-    console.log(imgUrls, formData);
     const formDataCopy = {
       ...formData,
       imgUrls,
@@ -188,7 +185,7 @@ export const CreateListing = () => {
       timestamp: serverTimestamp(),
     };
 
-    // formDataCopy.location = address;
+    formDataCopy.location = address;
     delete formDataCopy.images;
     delete formDataCopy.address;
     !formDataCopy.offer && delete formDataCopy.discounted;
